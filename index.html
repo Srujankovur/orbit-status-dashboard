@@ -509,15 +509,15 @@
             <div class="stats-bar">
                 <div class="stat-item">
                     <div class="stat-value" id="tableauTotalNodes">-</div>
-                    <div class="stat-label">Total Nodes</div>
+                    <div class="stat-label">Total Services</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="tableauUpNodes" style="color: #10b981;">-</div>
-                    <div class="stat-label">Nodes Up</div>
+                    <div class="stat-label">Services Up</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="tableauDownNodes" style="color: #ef4444;">-</div>
-                    <div class="stat-label">Nodes Down</div>
+                    <div class="stat-label">Services Down</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-value" id="tableauAvgResponseTime">-</div>
@@ -907,24 +907,37 @@ For support: it-support@uchicago.edu`);
             }
         }
 
-        // Generate Tableau demo data - matches actual Tableau configuration
+        // Generate Tableau demo data - shows all services with instance counts
         function generateTableauData() {
-            const tableauNodes = [
-                { name: 'Tableau Server Node 1', type: 'primary', status: 'UP', responseTime: 145 },
-                { name: 'Tableau Server Node 2', type: 'worker', status: 'UP', responseTime: 178 },
-                { name: 'Tableau Server Node 3', type: 'worker', status: 'UP', responseTime: 162 }
+            const tableauServices = [
+                { name: 'Cluster Controller', total: 3, up: 3, down: 0, responseTime: 145, description: 'Manages cluster configuration and coordination' },
+                { name: 'Application Server', total: 3, up: 3, down: 0, responseTime: 178, description: 'Handles web requests and user sessions' },
+                { name: 'VizQL Server', total: 3, up: 3, down: 0, responseTime: 234, description: 'Renders visualizations and dashboards' },
+                { name: 'Data Server', total: 3, up: 3, down: 0, responseTime: 156, description: 'Manages data connections and queries' },
+                { name: 'Repository', total: 3, up: 3, down: 0, responseTime: 98, description: 'PostgreSQL database for metadata' },
+                { name: 'Cache Server', total: 3, up: 3, down: 0, responseTime: 67, description: 'Caches query results and data' },
+                { name: 'Backgrounder', total: 3, up: 3, down: 0, responseTime: 145, description: 'Executes scheduled tasks and extracts' },
+                { name: 'Data Engine', total: 3, up: 3, down: 0, responseTime: 112, description: 'In-memory data engine (Hyper)' },
+                { name: 'Gateway', total: 3, up: 3, down: 0, responseTime: 89, description: 'Apache gateway for HTTP/HTTPS' },
+                { name: 'File Store', total: 3, up: 3, down: 0, responseTime: 123, description: 'Distributed file storage' },
+                { name: 'Coordination Service', total: 3, up: 3, down: 0, responseTime: 76, description: 'ZooKeeper for cluster coordination' },
+                { name: 'Search & Browse', total: 3, up: 3, down: 0, responseTime: 134, description: 'Search and indexing service' }
             ];
 
             const services = [];
 
-            tableauNodes.forEach(node => {
+            tableauServices.forEach(service => {
                 services.push({
-                    node_name: node.name,
-                    status: node.status,
-                    response_time_ms: node.responseTime,
+                    node_name: service.name,
+                    status: service.up === service.total ? 'UP' : (service.down === service.total ? 'DOWN' : 'DEGRADED'),
+                    response_time_ms: service.responseTime,
                     last_check_at: new Date().toISOString(),
                     last_up_at: new Date().toISOString(),
-                    consecutive_failures: 0
+                    consecutive_failures: service.down,
+                    total_instances: service.total,
+                    up_instances: service.up,
+                    down_instances: service.down,
+                    description: service.description
                 });
             });
 
@@ -990,13 +1003,75 @@ For support: it-support@uchicago.edu`);
             statusEl.textContent = `${statusIcons[status]} ${status}`;
 
             const statusMessages = {
-                'UP': `All ${nodeCount} Tableau nodes are operational and running smoothly`,
-                'DOWN': '⚠ Critical: One or more Tableau nodes are down',
+                'UP': `All ${nodeCount} Tableau services are operational and running smoothly`,
+                'DOWN': '⚠ Critical: One or more Tableau services are down',
                 'DEGRADED': '⚠ Warning: Tableau is running with reduced capacity',
                 'UNKNOWN': 'Unable to determine Tableau status - checking...'
             };
 
             messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Create Tableau service card with instance counts
+        function createTableauServiceCard(service) {
+            const card = document.createElement('div');
+            card.className = 'node-card';
+
+            const statusClass = service.status.toLowerCase();
+            const statusIcon = {
+                'up': '✓',
+                'down': '✗',
+                'degraded': '⚠',
+                'unknown': '?'
+            }[statusClass] || '?';
+
+            const responseTime = service.response_time_ms
+                ? `${service.response_time_ms}ms`
+                : 'N/A';
+
+            const responseClass = service.response_time_ms && service.response_time_ms < 500 ? 'good' : 'bad';
+
+            // Instance status bar
+            const instanceBar = service.total_instances ? `
+                <div class="node-metric" style="border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px;">
+                    <span class="metric-label" style="font-size: 0.85em; color: #6b7280;">📊 Instances:</span>
+                    <span class="metric-value" style="font-size: 1em;">
+                        <span style="color: #10b981; font-weight: 700;">${service.up_instances} UP</span>
+                        ${service.down_instances > 0 ? `<span style="color: #ef4444; font-weight: 700;"> / ${service.down_instances} DOWN</span>` : ''}
+                        <span style="color: #6b7280;"> / ${service.total_instances} Total</span>
+                    </span>
+                </div>
+            ` : '';
+
+            // Description
+            const descriptionSection = service.description ? `
+                <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 10px;">
+                    <span style="font-size: 0.85em; color: #6b7280; line-height: 1.4;">${service.description}</span>
+                </div>
+            ` : '';
+
+            card.innerHTML = `
+                <div class="node-header">
+                    <div class="node-name" style="font-size: 1.2em;">⚙️ ${service.node_name}</div>
+                    <div class="node-status-badge ${statusClass}">
+                        ${statusIcon} ${service.status}
+                    </div>
+                </div>
+                <div class="node-body">
+                    ${instanceBar}
+                    <div class="node-metric">
+                        <span class="metric-label">⚡ Response Time:</span>
+                        <span class="metric-value ${responseClass}">${responseTime}</span>
+                    </div>
+                    <div class="node-metric">
+                        <span class="metric-label">🕐 Last Check:</span>
+                        <span class="metric-value">${formatRelativeTime(service.last_check_at)}</span>
+                    </div>
+                    ${descriptionSection}
+                </div>
+            `;
+
+            return card;
         }
 
         // Render Tableau nodes
@@ -1005,12 +1080,12 @@ For support: it-support@uchicago.edu`);
             container.innerHTML = '';
 
             if (services.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No nodes found</p>';
+                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No services found</p>';
                 return;
             }
 
             services.forEach(service => {
-                const card = createNodeCard(service);
+                const card = createTableauServiceCard(service);
                 container.appendChild(card);
             });
         }
