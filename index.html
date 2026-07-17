@@ -445,12 +445,15 @@
             <p class="subtitle">University of Chicago - Real-Time Server Monitoring</p>
 
             <!-- Tab Navigation -->
-            <div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px;">
+            <div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
                 <button class="tab-btn active" onclick="switchTab('orbit')" id="orbitTab">
                     📊 Orbit Status
                 </button>
                 <button class="tab-btn" onclick="switchTab('tableau')" id="tableauTab">
                     📈 Tableau Status
+                </button>
+                <button class="tab-btn" onclick="switchTab('sapbo')" id="sapboTab">
+                    💼 SAP BO Status
                 </button>
             </div>
 
@@ -561,6 +564,49 @@
                 </button>
                 <button class="btn btn-secondary" onclick="window.open('https://dataviz.uchicago.edu/#/server/status', '_blank')">
                     🔗 Open Tableau Server Status
+                </button>
+            </div>
+        </div>
+
+        <!-- SAP BO Tab Content -->
+        <div class="tab-content" id="sapboContent">
+            <div class="overall-status">
+                <h2>SAP BusinessObjects Server Status</h2>
+                <div class="status-indicator unknown pulse" id="sapboOverallStatus">
+                    CHECKING...
+                </div>
+                <p class="status-message" id="sapboStatusMessage">Initializing system check...</p>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="sapboTotalNodes">-</div>
+                    <div class="stat-label">Total Nodes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sapboUpNodes" style="color: #10b981;">-</div>
+                    <div class="stat-label">Nodes Up</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sapboDownNodes" style="color: #ef4444;">-</div>
+                    <div class="stat-label">Nodes Down</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="sapboAvgResponseTime">-</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
+            </div>
+
+            <div class="nodes-grid" id="sapboNodesContainer">
+                <!-- SAP BO nodes will be populated here -->
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="sapboRefreshBtn" onclick="refreshSAPBOStatus()">
+                    🔄 Refresh Status Now
+                </button>
+                <button class="btn btn-secondary" onclick="window.open('https://bireporting.uchicago.edu/BOE/CMC/', '_blank')">
+                    🔗 Open SAP BO CMC
                 </button>
             </div>
         </div>
@@ -922,7 +968,36 @@ For support: it-support@uchicago.edu`);
                 document.getElementById('tableauContent').classList.add('active');
                 document.getElementById('tableauTab').classList.add('active');
                 loadTableauStatus();
+            } else if (tabName === 'sapbo') {
+                document.getElementById('sapboContent').classList.add('active');
+                document.getElementById('sapboTab').classList.add('active');
+                loadSAPBOStatus();
             }
+        }
+
+        // Generate SAP BO nodes data
+        function generateSAPBONodesData() {
+            const sapboNodes = [
+                { name: 'SAP BO Server Node 1', type: 'primary', status: 'UP', responseTime: 198 },
+                { name: 'SAP BO Server Node 2', type: 'secondary', status: 'UP', responseTime: 234 },
+                { name: 'SAP BO Server Node 3', type: 'secondary', status: 'UP', responseTime: 212 },
+                { name: 'SAP BO Server Node 4', type: 'secondary', status: 'UP', responseTime: 189 }
+            ];
+
+            const nodes = [];
+
+            sapboNodes.forEach(node => {
+                nodes.push({
+                    node_name: node.name,
+                    status: node.status,
+                    response_time_ms: node.responseTime,
+                    last_check_at: new Date().toISOString(),
+                    last_up_at: new Date().toISOString(),
+                    consecutive_failures: 0
+                });
+            });
+
+            return nodes;
         }
 
         // Generate Tableau nodes data
@@ -1202,6 +1277,104 @@ For support: it-support@uchicago.edu`);
             }, 1000);
         }
 
+        // Load SAP BO status
+        function loadSAPBOStatus() {
+            const nodes = generateSAPBONodesData();
+
+            const allUp = nodes.every(n => n.status === 'UP');
+            const anyDown = nodes.some(n => n.status === 'DOWN');
+
+            let overallStatus;
+            if (allUp) overallStatus = 'UP';
+            else if (anyDown) overallStatus = 'DOWN';
+            else overallStatus = 'DEGRADED';
+
+            updateSAPBOOverallStatus(overallStatus, nodes.length);
+            updateSAPBOStats(nodes);
+            renderSAPBONodes(nodes);
+
+            document.getElementById('lastUpdate').innerHTML =
+                `⏱️ Last Updated: ${new Date().toLocaleString()} | SAP BusinessObjects`;
+        }
+
+        // Update SAP BO overall status
+        function updateSAPBOOverallStatus(status, nodeCount) {
+            const statusEl = document.getElementById('sapboOverallStatus');
+            const messageEl = document.getElementById('sapboStatusMessage');
+
+            statusEl.className = `status-indicator ${status.toLowerCase()}`;
+            statusEl.classList.remove('pulse');
+
+            const statusIcons = {
+                'UP': '✓',
+                'DOWN': '✗',
+                'DEGRADED': '⚠',
+                'UNKNOWN': '?'
+            };
+
+            statusEl.textContent = `${statusIcons[status]} ${status}`;
+
+            const statusMessages = {
+                'UP': `All ${nodeCount} SAP BO nodes are operational and running smoothly`,
+                'DOWN': '⚠ Critical: One or more SAP BO nodes are down',
+                'DEGRADED': '⚠ Warning: SAP BO is running with reduced capacity',
+                'UNKNOWN': 'Unable to determine SAP BO status - checking...'
+            };
+
+            messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Update SAP BO statistics
+        function updateSAPBOStats(nodes) {
+            const totalNodes = nodes.length;
+            const upNodes = nodes.filter(n => n.status === 'UP').length;
+            const downNodes = nodes.filter(n => n.status === 'DOWN').length;
+
+            const responseTimes = nodes
+                .filter(n => n.response_time_ms)
+                .map(n => n.response_time_ms);
+
+            const avgResponseTime = responseTimes.length > 0
+                ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+                : 0;
+
+            document.getElementById('sapboTotalNodes').textContent = totalNodes;
+            document.getElementById('sapboUpNodes').textContent = upNodes;
+            document.getElementById('sapboDownNodes').textContent = downNodes;
+            document.getElementById('sapboAvgResponseTime').textContent =
+                avgResponseTime > 0 ? `${avgResponseTime}ms` : 'N/A';
+        }
+
+        // Render SAP BO nodes
+        function renderSAPBONodes(nodes) {
+            const container = document.getElementById('sapboNodesContainer');
+            container.innerHTML = '';
+
+            if (nodes.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No nodes found</p>';
+                return;
+            }
+
+            nodes.forEach(node => {
+                const card = createNodeCard(node);
+                container.appendChild(card);
+            });
+        }
+
+        // Refresh SAP BO status
+        async function refreshSAPBOStatus() {
+            const btn = document.getElementById('sapboRefreshBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Refreshing...';
+
+            setTimeout(() => {
+                loadSAPBOStatus();
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Refresh Status Now';
+                showAlert('SAP BO status refreshed successfully', 'success');
+            }, 1000);
+        }
+
         // Initialize
         loadStatus();
 
@@ -1212,6 +1385,8 @@ For support: it-support@uchicago.edu`);
                 loadStatus();
             } else if (activeTab === 'tableauTab') {
                 loadTableauStatus();
+            } else if (activeTab === 'sapboTab') {
+                loadSAPBOStatus();
             }
         }, 300000);
 
@@ -1223,6 +1398,8 @@ For support: it-support@uchicago.edu`);
                     loadStatus();
                 } else if (activeTab === 'tableauTab') {
                     loadTableauStatus();
+                } else if (activeTab === 'sapboTab') {
+                    loadSAPBOStatus();
                 }
             }
         });
