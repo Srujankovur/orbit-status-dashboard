@@ -1781,6 +1781,14 @@ For support: it-support@uchicago.edu`);
                 ? Math.round(servers.reduce((sum, s) => sum + (s.response_time_ms || 0), 0) / servers.length)
                 : 0;
 
+            const totalFailures = servers.reduce((sum, s) => sum + (s.consecutive_failures || 0), 0);
+            const failureClass = totalFailures > 0 ? 'bad' : 'good';
+
+            // Find the most recent "last up" time
+            const lastUpTime = servers.length > 0
+                ? servers[0].last_up_at
+                : new Date().toISOString();
+
             // Instance status bar
             const instanceBar = `
                 <div class="node-metric" style="border-bottom: 2px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 15px;">
@@ -1809,6 +1817,14 @@ For support: it-support@uchicago.edu`);
                     <div class="node-metric">
                         <span class="metric-label">🕐 Last Check:</span>
                         <span class="metric-value">${formatRelativeTime(servers[0].last_check_at)}</span>
+                    </div>
+                    <div class="node-metric">
+                        <span class="metric-label">✅ Last Up:</span>
+                        <span class="metric-value">${formatRelativeTime(lastUpTime)}</span>
+                    </div>
+                    <div class="node-metric">
+                        <span class="metric-label">❌ Consecutive Failures:</span>
+                        <span class="metric-value ${failureClass}">${totalFailures}</span>
                     </div>
                     <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 10px;">
                         <span style="font-size: 0.85em; color: #6b7280; line-height: 1.4;">
