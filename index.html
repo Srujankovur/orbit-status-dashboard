@@ -403,6 +403,35 @@
             background: #d1fae5;
             border-left-color: #10b981;
         }
+
+        .tab-btn {
+            padding: 12px 30px;
+            border: 2px solid #800000;
+            background: white;
+            color: #800000;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .tab-btn.active {
+            background: #800000;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -412,8 +441,19 @@
 
     <div class="container">
         <div class="header">
-            <h1>🛡️ Orbit Server Status Dashboard</h1>
+            <h1>🛡️ BI Server Status Dashboard</h1>
             <p class="subtitle">University of Chicago - Real-Time Server Monitoring</p>
+
+            <!-- Tab Navigation -->
+            <div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px;">
+                <button class="tab-btn active" onclick="switchTab('orbit')" id="orbitTab">
+                    📊 Orbit Status
+                </button>
+                <button class="tab-btn" onclick="switchTab('tableau')" id="tableauTab">
+                    📈 Tableau Status
+                </button>
+            </div>
+
             <div class="last-update" id="lastUpdate">
                 ⏱️ Initializing system check...
             </div>
@@ -421,48 +461,94 @@
 
         <div class="alert-box" id="alertBox"></div>
 
-        <div class="stats-bar">
-            <div class="stat-item">
-                <div class="stat-value" id="totalNodes">-</div>
-                <div class="stat-label">Total Nodes</div>
+        <!-- Orbit Tab Content -->
+        <div class="tab-content active" id="orbitContent">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalNodes">-</div>
+                    <div class="stat-label">Total Nodes</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="upNodes" style="color: #10b981;">-</div>
+                    <div class="stat-label">Nodes Up</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="downNodes" style="color: #ef4444;">-</div>
+                    <div class="stat-label">Nodes Down</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgResponseTime">-</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="upNodes" style="color: #10b981;">-</div>
-                <div class="stat-label">Nodes Up</div>
+
+            <div class="overall-status">
+                <h2>Orbit System Status</h2>
+                <div class="status-indicator unknown pulse" id="overallStatus">
+                    CHECKING...
+                </div>
+                <p class="status-message" id="statusMessage">Initializing system check...</p>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="downNodes" style="color: #ef4444;">-</div>
-                <div class="stat-label">Nodes Down</div>
+
+            <div class="nodes-grid" id="nodesContainer">
+                <!-- Nodes will be populated here -->
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="avgResponseTime">-</div>
-                <div class="stat-label">Avg Response</div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="refreshBtn" onclick="refreshStatus()">
+                    🔄 Refresh Status Now
+                </button>
+                <button class="btn btn-secondary" onclick="window.open('https://orbitreporting.uchicago.edu', '_blank')">
+                    🔗 Open Orbit Application
+                </button>
             </div>
         </div>
 
-        <div class="overall-status">
-            <h2>Overall System Status</h2>
-            <div class="status-indicator unknown pulse" id="overallStatus">
-                CHECKING...
+        <!-- Tableau Tab Content -->
+        <div class="tab-content" id="tableauContent">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="tableauTotalNodes">-</div>
+                    <div class="stat-label">Total Services</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tableauUpNodes" style="color: #10b981;">-</div>
+                    <div class="stat-label">Services Up</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tableauDownNodes" style="color: #ef4444;">-</div>
+                    <div class="stat-label">Services Down</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="tableauAvgResponseTime">-</div>
+                    <div class="stat-label">Avg Response</div>
+                </div>
             </div>
-            <p class="status-message" id="statusMessage">Initializing system check...</p>
-        </div>
 
-        <div class="nodes-grid" id="nodesContainer">
-            <!-- Nodes will be populated here -->
-        </div>
+            <div class="overall-status">
+                <h2>Tableau Server Status</h2>
+                <div class="status-indicator unknown pulse" id="tableauOverallStatus">
+                    CHECKING...
+                </div>
+                <p class="status-message" id="tableauStatusMessage">Initializing system check...</p>
+            </div>
 
-        <div class="actions">
-            <button class="btn btn-primary" id="refreshBtn" onclick="refreshStatus()">
-                🔄 Refresh Status Now
-            </button>
-            <button class="btn btn-secondary" onclick="window.open('https://orbitreporting.uchicago.edu', '_blank')">
-                🔗 Open Orbit Application
-            </button>
+            <div class="nodes-grid" id="tableauNodesContainer">
+                <!-- Tableau services will be populated here -->
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" id="tableauRefreshBtn" onclick="refreshTableauStatus()">
+                    🔄 Refresh Status Now
+                </button>
+                <button class="btn btn-secondary" onclick="window.open('https://dataviz.uchicago.edu/#/server/status', '_blank')">
+                    🔗 Open Tableau Server Status
+                </button>
+            </div>
         </div>
 
         <div class="footer">
-            <p><strong>Orbit Status Portal</strong> | Monitoring Interval: 5 minutes | Auto-refresh enabled</p>
+            <p><strong>BI Status Portal</strong> | Monitoring Interval: 5 minutes | Auto-refresh enabled</p>
             <div class="footer-links">
                 <a href="https://orbitreporting.uchicago.edu" target="_blank">Orbit Application</a>
                 <a href="mailto:it-support@uchicago.edu">IT Support</a>
@@ -797,16 +883,179 @@ Features:
 For support: it-support@uchicago.edu`);
         }
 
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected content
+            if (tabName === 'orbit') {
+                document.getElementById('orbitContent').classList.add('active');
+                document.getElementById('orbitTab').classList.add('active');
+                loadStatus();
+            } else if (tabName === 'tableau') {
+                document.getElementById('tableauContent').classList.add('active');
+                document.getElementById('tableauTab').classList.add('active');
+                loadTableauStatus();
+            }
+        }
+
+        // Generate Tableau demo data
+        function generateTableauData() {
+            const tableauServices = [
+                { name: 'Gateway', type: 'gateway', status: 'UP', responseTime: 125 },
+                { name: 'Application Server', type: 'app', status: 'UP', responseTime: 234 },
+                { name: 'VizQL Server', type: 'vizql', status: 'UP', responseTime: 189 },
+                { name: 'Data Server', type: 'data', status: 'UP', responseTime: 156 },
+                { name: 'Repository', type: 'repository', status: 'UP', responseTime: 98 },
+                { name: 'Cache Server', type: 'cache', status: 'UP', responseTime: 67 },
+                { name: 'Backgrounder', type: 'backgrounder', status: 'UP', responseTime: 145 },
+                { name: 'File Store', type: 'filestore', status: 'UP', responseTime: 112 }
+            ];
+
+            const services = [];
+
+            tableauServices.forEach(service => {
+                services.push({
+                    node_name: service.name,
+                    status: service.status,
+                    response_time_ms: service.responseTime,
+                    last_check_at: new Date().toISOString(),
+                    last_up_at: new Date().toISOString(),
+                    consecutive_failures: 0
+                });
+            });
+
+            return services;
+        }
+
+        // Load Tableau status
+        function loadTableauStatus() {
+            const services = generateTableauData();
+
+            const allUp = services.every(n => n.status === 'UP');
+            const anyDown = services.some(n => n.status === 'DOWN');
+
+            let overallStatus;
+            if (allUp) overallStatus = 'UP';
+            else if (anyDown) overallStatus = 'DOWN';
+            else overallStatus = 'DEGRADED';
+
+            updateTableauOverallStatus(overallStatus, services.length);
+            updateTableauStats(services);
+            renderTableauNodes(services);
+
+            document.getElementById('lastUpdate').innerHTML =
+                `⏱️ Last Updated: ${new Date().toLocaleString()} | Tableau Server`;
+        }
+
+        // Update Tableau statistics
+        function updateTableauStats(services) {
+            const totalNodes = services.length;
+            const upNodes = services.filter(n => n.status === 'UP').length;
+            const downNodes = services.filter(n => n.status === 'DOWN').length;
+
+            const responseTimes = services
+                .filter(n => n.response_time_ms)
+                .map(n => n.response_time_ms);
+
+            const avgResponseTime = responseTimes.length > 0
+                ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+                : 0;
+
+            document.getElementById('tableauTotalNodes').textContent = totalNodes;
+            document.getElementById('tableauUpNodes').textContent = upNodes;
+            document.getElementById('tableauDownNodes').textContent = downNodes;
+            document.getElementById('tableauAvgResponseTime').textContent =
+                avgResponseTime > 0 ? `${avgResponseTime}ms` : 'N/A';
+        }
+
+        // Update Tableau overall status
+        function updateTableauOverallStatus(status, nodeCount) {
+            const statusEl = document.getElementById('tableauOverallStatus');
+            const messageEl = document.getElementById('tableauStatusMessage');
+
+            statusEl.className = `status-indicator ${status.toLowerCase()}`;
+            statusEl.classList.remove('pulse');
+
+            const statusIcons = {
+                'UP': '✓',
+                'DOWN': '✗',
+                'DEGRADED': '⚠',
+                'UNKNOWN': '?'
+            };
+
+            statusEl.textContent = `${statusIcons[status]} ${status}`;
+
+            const statusMessages = {
+                'UP': `All ${nodeCount} Tableau services are operational and running smoothly`,
+                'DOWN': '⚠ Critical: One or more Tableau services are down',
+                'DEGRADED': '⚠ Warning: Tableau is running with reduced capacity',
+                'UNKNOWN': 'Unable to determine Tableau status - checking...'
+            };
+
+            messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Render Tableau nodes
+        function renderTableauNodes(services) {
+            const container = document.getElementById('tableauNodesContainer');
+            container.innerHTML = '';
+
+            if (services.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No services found</p>';
+                return;
+            }
+
+            services.forEach(service => {
+                const card = createNodeCard(service);
+                container.appendChild(card);
+            });
+        }
+
+        // Refresh Tableau status
+        async function refreshTableauStatus() {
+            const btn = document.getElementById('tableauRefreshBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Refreshing...';
+
+            setTimeout(() => {
+                loadTableauStatus();
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Refresh Status Now';
+                showAlert('Tableau status refreshed successfully', 'success');
+            }, 1000);
+        }
+
         // Initialize
         loadStatus();
 
         // Auto-refresh every 5 minutes
-        refreshInterval = setInterval(loadStatus, 300000);
+        refreshInterval = setInterval(() => {
+            const activeTab = document.querySelector('.tab-btn.active').id;
+            if (activeTab === 'orbitTab') {
+                loadStatus();
+            } else if (activeTab === 'tableauTab') {
+                loadTableauStatus();
+            }
+        }, 300000);
 
         // Refresh on visibility change
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
-                loadStatus();
+                const activeTab = document.querySelector('.tab-btn.active').id;
+                if (activeTab === 'orbitTab') {
+                    loadStatus();
+                } else if (activeTab === 'tableauTab') {
+                    loadTableauStatus();
+                }
             }
         });
     </script>
