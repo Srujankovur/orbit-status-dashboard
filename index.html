@@ -585,6 +585,40 @@
                 </div>
             </div>
 
+            <!-- Central Management Servers Section -->
+            <div style="border-top: 3px solid rgba(255,255,255,0.3); padding-top: 40px; margin-bottom: 40px;">
+                <div class="overall-status">
+                    <h2>Central Management Servers (CMS)</h2>
+                    <div class="status-indicator unknown pulse" id="cmsOverallStatus">
+                        CHECKING...
+                    </div>
+                    <p class="status-message" id="cmsStatusMessage">Aggregated from all SAP BO nodes...</p>
+                </div>
+
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-value" id="cmsTotalServers">-</div>
+                        <div class="stat-label">Total CMS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="cmsUpServers" style="color: #10b981;">-</div>
+                        <div class="stat-label">CMS Up</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="cmsDownServers" style="color: #ef4444;">-</div>
+                        <div class="stat-label">CMS Down</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="cmsAvgResponseTime">-</div>
+                        <div class="stat-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="nodes-grid" id="cmsServersContainer">
+                    <!-- CMS servers will be populated here -->
+                </div>
+            </div>
+
             <!-- WebIntelligence Processing Servers Section -->
             <div style="border-top: 3px solid rgba(255,255,255,0.3); padding-top: 40px; margin-bottom: 40px;">
                 <div class="overall-status">
@@ -616,6 +650,40 @@
 
                 <div class="nodes-grid" id="webiServersContainer">
                     <!-- WebI servers will be populated here -->
+                </div>
+            </div>
+
+            <!-- Adaptive Job Servers Section -->
+            <div style="border-top: 3px solid rgba(255,255,255,0.3); padding-top: 40px; margin-bottom: 40px;">
+                <div class="overall-status">
+                    <h2>Adaptive Job Servers</h2>
+                    <div class="status-indicator unknown pulse" id="ajsOverallStatus">
+                        CHECKING...
+                    </div>
+                    <p class="status-message" id="ajsStatusMessage">Aggregated from all SAP BO nodes...</p>
+                </div>
+
+                <div class="stats-bar">
+                    <div class="stat-item">
+                        <div class="stat-value" id="ajsTotalServers">-</div>
+                        <div class="stat-label">Total AJS</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="ajsUpServers" style="color: #10b981;">-</div>
+                        <div class="stat-label">AJS Up</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="ajsDownServers" style="color: #ef4444;">-</div>
+                        <div class="stat-label">AJS Down</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="ajsAvgResponseTime">-</div>
+                        <div class="stat-label">Avg Response</div>
+                    </div>
+                </div>
+
+                <div class="nodes-grid" id="ajsServersContainer">
+                    <!-- AJS servers will be populated here -->
                 </div>
             </div>
 
@@ -1047,34 +1115,101 @@ For support: it-support@uchicago.edu`);
             return nodes;
         }
 
+        // Generate Central Management Servers data (aggregated from all 4 nodes)
+        function generateCMSServersData() {
+            const cmsServers = [
+                { name: 'CentralManagementServer (Node 1)', node: 1, status: 'UP', responseTime: 98 },
+                { name: 'CentralManagementServer (Node 2)', node: 2, status: 'UP', responseTime: 105 },
+                { name: 'CentralManagementServer (Node 3)', node: 3, status: 'UP', responseTime: 92 },
+                { name: 'CentralManagementServer (Node 4)', node: 4, status: 'UP', responseTime: 110 }
+            ];
+
+            const servers = [];
+
+            cmsServers.forEach(server => {
+                servers.push({
+                    node_name: server.name,
+                    status: server.status,
+                    response_time_ms: server.responseTime,
+                    last_check_at: new Date().toISOString(),
+                    last_up_at: new Date().toISOString(),
+                    consecutive_failures: 0,
+                    source_node: server.node
+                });
+            });
+
+            return servers;
+        }
+
         // Generate WebIntelligence Processing Servers data (aggregated from all 4 nodes)
         function generateWebIServersData() {
-            // Each SAP BO node has multiple WebI processing servers
+            // Each SAP BO node has multiple WebI processing servers (both types)
             const webiServers = [
                 // Node 1 WebI servers
                 { name: 'WebIntelligenceProcessingServer1 (Node 1)', node: 1, status: 'UP', responseTime: 178 },
                 { name: 'WebIntelligenceProcessingServer2 (Node 1)', node: 1, status: 'UP', responseTime: 165 },
                 { name: 'WebIntelligenceProcessingServer3 (Node 1)', node: 1, status: 'UP', responseTime: 192 },
+                { name: 'WebiIntelligenceProcessingServer1 (Node 1)', node: 1, status: 'UP', responseTime: 183 },
 
                 // Node 2 WebI servers
                 { name: 'WebIntelligenceProcessingServer1 (Node 2)', node: 2, status: 'UP', responseTime: 156 },
                 { name: 'WebIntelligenceProcessingServer2 (Node 2)', node: 2, status: 'UP', responseTime: 188 },
                 { name: 'WebIntelligenceProcessingServer3 (Node 2)', node: 2, status: 'UP', responseTime: 201 },
+                { name: 'WebiIntelligenceProcessingServer1 (Node 2)', node: 2, status: 'UP', responseTime: 175 },
 
                 // Node 3 WebI servers
                 { name: 'WebIntelligenceProcessingServer1 (Node 3)', node: 3, status: 'UP', responseTime: 143 },
                 { name: 'WebIntelligenceProcessingServer2 (Node 3)', node: 3, status: 'UP', responseTime: 177 },
                 { name: 'WebIntelligenceProcessingServer3 (Node 3)', node: 3, status: 'UP', responseTime: 195 },
+                { name: 'WebiIntelligenceProcessingServer1 (Node 3)', node: 3, status: 'UP', responseTime: 168 },
 
                 // Node 4 WebI servers
                 { name: 'WebIntelligenceProcessingServer1 (Node 4)', node: 4, status: 'UP', responseTime: 168 },
                 { name: 'WebIntelligenceProcessingServer2 (Node 4)', node: 4, status: 'UP', responseTime: 182 },
-                { name: 'WebIntelligenceProcessingServer3 (Node 4)', node: 4, status: 'UP', responseTime: 159 }
+                { name: 'WebIntelligenceProcessingServer3 (Node 4)', node: 4, status: 'UP', responseTime: 159 },
+                { name: 'WebiIntelligenceProcessingServer1 (Node 4)', node: 4, status: 'UP', responseTime: 191 }
             ];
 
             const servers = [];
 
             webiServers.forEach(server => {
+                servers.push({
+                    node_name: server.name,
+                    status: server.status,
+                    response_time_ms: server.responseTime,
+                    last_check_at: new Date().toISOString(),
+                    last_up_at: new Date().toISOString(),
+                    consecutive_failures: 0,
+                    source_node: server.node
+                });
+            });
+
+            return servers;
+        }
+
+        // Generate Adaptive Job Servers data (aggregated from all 4 nodes)
+        function generateAJSServersData() {
+            const ajsServers = [
+                // Node 1 AJS servers
+                { name: 'AdaptiveJobServer1 (Node 1)', node: 1, status: 'UP', responseTime: 134 },
+                { name: 'AdaptiveJobServer2 (Node 1)', node: 1, status: 'UP', responseTime: 156 },
+
+                // Node 2 AJS servers
+                { name: 'AdaptiveJobServer1 (Node 2)', node: 2, status: 'UP', responseTime: 145 },
+                { name: 'AdaptiveJobServer2 (Node 2)', node: 2, status: 'UP', responseTime: 167 },
+
+                // Node 3 AJS servers
+                { name: 'AdaptiveJobServer1 (Node 3)', node: 3, status: 'UP', responseTime: 128 },
+                { name: 'AdaptiveJobServer2 (Node 3)', node: 3, status: 'UP', responseTime: 149 },
+
+                // Node 4 AJS servers
+                { name: 'AdaptiveJobServer1 (Node 4)', node: 4, status: 'UP', responseTime: 152 },
+                { name: 'AdaptiveJobServer2 (Node 4)', node: 4, status: 'UP', responseTime: 138 }
+            ];
+
+            const servers = [];
+
+            ajsServers.forEach(server => {
                 servers.push({
                     node_name: server.name,
                     status: server.status,
@@ -1407,6 +1542,21 @@ For support: it-support@uchicago.edu`);
             updateSAPBOOverallStatus(nodesOverallStatus, nodes.length);
             renderSAPBONodes(nodes);
 
+            // Load Central Management Servers
+            const cmsServers = generateCMSServersData();
+
+            const allCMSUp = cmsServers.every(n => n.status === 'UP');
+            const anyCMSDown = cmsServers.some(n => n.status === 'DOWN');
+
+            let cmsOverallStatus;
+            if (allCMSUp) cmsOverallStatus = 'UP';
+            else if (anyCMSDown) cmsOverallStatus = 'DOWN';
+            else cmsOverallStatus = 'DEGRADED';
+
+            updateCMSOverallStatus(cmsOverallStatus, cmsServers.length);
+            updateCMSStats(cmsServers);
+            renderCMSServers(cmsServers);
+
             // Load WebIntelligence Processing Servers
             const webiServers = generateWebIServersData();
 
@@ -1421,6 +1571,21 @@ For support: it-support@uchicago.edu`);
             updateWebIOverallStatus(webiOverallStatus, webiServers.length);
             updateWebIStats(webiServers);
             renderWebIServers(webiServers);
+
+            // Load Adaptive Job Servers
+            const ajsServers = generateAJSServersData();
+
+            const allAJSUp = ajsServers.every(n => n.status === 'UP');
+            const anyAJSDown = ajsServers.some(n => n.status === 'DOWN');
+
+            let ajsOverallStatus;
+            if (allAJSUp) ajsOverallStatus = 'UP';
+            else if (anyAJSDown) ajsOverallStatus = 'DOWN';
+            else ajsOverallStatus = 'DEGRADED';
+
+            updateAJSOverallStatus(ajsOverallStatus, ajsServers.length);
+            updateAJSStats(ajsServers);
+            renderAJSServers(ajsServers);
 
             // Load Tomcat servers
             const tomcatServers = generateTomcatServersData();
@@ -1466,6 +1631,70 @@ For support: it-support@uchicago.edu`);
             };
 
             messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Update CMS overall status
+        function updateCMSOverallStatus(status, serverCount) {
+            const statusEl = document.getElementById('cmsOverallStatus');
+            const messageEl = document.getElementById('cmsStatusMessage');
+
+            statusEl.className = `status-indicator ${status.toLowerCase()}`;
+            statusEl.classList.remove('pulse');
+
+            const statusIcons = {
+                'UP': '✓',
+                'DOWN': '✗',
+                'DEGRADED': '⚠',
+                'UNKNOWN': '?'
+            };
+
+            statusEl.textContent = `${statusIcons[status]} ${status}`;
+
+            const statusMessages = {
+                'UP': `All ${serverCount} Central Management Servers are operational`,
+                'DOWN': '⚠ Critical: One or more CMS servers are down',
+                'DEGRADED': '⚠ Warning: CMS is running with reduced capacity',
+                'UNKNOWN': 'Unable to determine CMS status - checking...'
+            };
+
+            messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Update CMS statistics
+        function updateCMSStats(servers) {
+            const totalServers = servers.length;
+            const upServers = servers.filter(n => n.status === 'UP').length;
+            const downServers = servers.filter(n => n.status === 'DOWN').length;
+
+            const responseTimes = servers
+                .filter(n => n.response_time_ms)
+                .map(n => n.response_time_ms);
+
+            const avgResponseTime = responseTimes.length > 0
+                ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+                : 0;
+
+            document.getElementById('cmsTotalServers').textContent = totalServers;
+            document.getElementById('cmsUpServers').textContent = upServers;
+            document.getElementById('cmsDownServers').textContent = downServers;
+            document.getElementById('cmsAvgResponseTime').textContent =
+                avgResponseTime > 0 ? `${avgResponseTime}ms` : 'N/A';
+        }
+
+        // Render CMS servers
+        function renderCMSServers(servers) {
+            const container = document.getElementById('cmsServersContainer');
+            container.innerHTML = '';
+
+            if (servers.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No CMS servers found</p>';
+                return;
+            }
+
+            servers.forEach(server => {
+                const card = createNodeCard(server);
+                container.appendChild(card);
+            });
         }
 
         // Update WebI overall status
@@ -1523,6 +1752,70 @@ For support: it-support@uchicago.edu`);
 
             if (servers.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No WebI servers found</p>';
+                return;
+            }
+
+            servers.forEach(server => {
+                const card = createNodeCard(server);
+                container.appendChild(card);
+            });
+        }
+
+        // Update AJS overall status
+        function updateAJSOverallStatus(status, serverCount) {
+            const statusEl = document.getElementById('ajsOverallStatus');
+            const messageEl = document.getElementById('ajsStatusMessage');
+
+            statusEl.className = `status-indicator ${status.toLowerCase()}`;
+            statusEl.classList.remove('pulse');
+
+            const statusIcons = {
+                'UP': '✓',
+                'DOWN': '✗',
+                'DEGRADED': '⚠',
+                'UNKNOWN': '?'
+            };
+
+            statusEl.textContent = `${statusIcons[status]} ${status}`;
+
+            const statusMessages = {
+                'UP': `All ${serverCount} Adaptive Job Servers are operational (aggregated from 4 nodes)`,
+                'DOWN': '⚠ Critical: One or more AJS servers are down',
+                'DEGRADED': '⚠ Warning: AJS is running with reduced capacity',
+                'UNKNOWN': 'Unable to determine AJS status - checking...'
+            };
+
+            messageEl.textContent = statusMessages[status] || 'Status unknown';
+        }
+
+        // Update AJS statistics
+        function updateAJSStats(servers) {
+            const totalServers = servers.length;
+            const upServers = servers.filter(n => n.status === 'UP').length;
+            const downServers = servers.filter(n => n.status === 'DOWN').length;
+
+            const responseTimes = servers
+                .filter(n => n.response_time_ms)
+                .map(n => n.response_time_ms);
+
+            const avgResponseTime = responseTimes.length > 0
+                ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+                : 0;
+
+            document.getElementById('ajsTotalServers').textContent = totalServers;
+            document.getElementById('ajsUpServers').textContent = upServers;
+            document.getElementById('ajsDownServers').textContent = downServers;
+            document.getElementById('ajsAvgResponseTime').textContent =
+                avgResponseTime > 0 ? `${avgResponseTime}ms` : 'N/A';
+        }
+
+        // Render AJS servers
+        function renderAJSServers(servers) {
+            const container = document.getElementById('ajsServersContainer');
+            container.innerHTML = '';
+
+            if (servers.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:white; font-size:1.2em;">No AJS servers found</p>';
                 return;
             }
 
