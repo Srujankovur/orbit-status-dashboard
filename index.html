@@ -1115,13 +1115,11 @@ For support: it-support@uchicago.edu`);
             return nodes;
         }
 
-        // Generate Central Management Servers data (aggregated from all 4 nodes)
+        // Generate Central Management Servers data (only from Node 1 and Node 2)
         function generateCMSServersData() {
             const cmsServers = [
                 { name: 'CentralManagementServer (Node 1)', node: 1, status: 'UP', responseTime: 98 },
-                { name: 'CentralManagementServer (Node 2)', node: 2, status: 'UP', responseTime: 105 },
-                { name: 'CentralManagementServer (Node 3)', node: 3, status: 'UP', responseTime: 92 },
-                { name: 'CentralManagementServer (Node 4)', node: 4, status: 'UP', responseTime: 110 }
+                { name: 'CentralManagementServer (Node 2)', node: 2, status: 'UP', responseTime: 105 }
             ];
 
             const servers = [];
